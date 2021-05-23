@@ -1,4 +1,5 @@
 using Hangfire;
+using Hangfire.Dashboard.BasicAuthorization;
 using Hangfire.SqlServer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -73,7 +74,22 @@ namespace Practices.NetCore.Hangfire
 
             app.UseHangfireDashboard("/manage-schedulers", new DashboardOptions {
                 AppPath = "/swagger",
-                DashboardTitle = "Manage schedulers!"
+                DashboardTitle = "Manage schedulers!",
+                Authorization = new[] { new BasicAuthAuthorizationFilter(new BasicAuthAuthorizationFilterOptions
+                    {
+                        RequireSsl = Convert.ToBoolean(Configuration.GetSection("HangfireCredentials:RequireSsl").Value),
+                        SslRedirect = false,
+                        LoginCaseSensitive = true,
+                        Users = new []
+                        {
+                            new BasicAuthAuthorizationUser
+                            {
+                                Login = Configuration.GetSection("HangfireCredentials:UserName").Value,
+                                PasswordClear =  Configuration.GetSection("HangfireCredentials:Password").Value
+                            }
+                        }
+
+                    }) }
             });
 
             app.UseHttpsRedirection();
